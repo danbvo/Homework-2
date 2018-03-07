@@ -1,0 +1,88 @@
+---
+title: "HW02_Shot_Charts"
+author: "Daniel Vo"
+date: "3/4/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = "../images/")
+```
+
+```{R}
+library(dplyr)
+library(ggplot2)
+dt <- read.csv(file = "../data/shots-data.csv")
+group_by(dt, name)
+
+
+dt1 <- arrange(summarise(
+  group_by(dt, name),
+  total = length(shot_made_flag)), desc(total))
+
+dt <- mutate(dt, made = as.numeric(shot_made_flag=="made shot"))
+
+
+dt2 <- summarise(
+  group_by(dt, name),
+  total = length(shot_made_flag),
+  made = sum(made)
+)
+
+dt2 <- mutate(dt2, perc.made = 100*made/total)
+
+dt3 <- summarise(
+  group_by(dt, shot_distance),
+  made_shot_prop = mean(as.numeric(shot_made_flag=="made shot"))
+)
+
+ggplot(data = dt3, aes(x = shot_distance, y = made_shot_prop))+
+  geom_point()+
+  theme_minimal()
+
+filter(dt3, made_shot_prop>=0.5)$shot_distance
+```
+
+#Comment on the Scatter Plot
+
+What do you observe?
+- Downward trend in probability as we go from distance 0 to distance 3 or 4. Probability is considerably similar between distance 3-4 to distance 33-35. From distance 33-35 and above, probability of making the shot is zero. There's a outline at distance 51, which is caused by the only data point at this distance, and that was a made shot by Stephen Curry
+
+Can you confirm that the shorter the distance, the more effective the shots?
+- We can do that only for the first 3 distance points. But we cannot confirm this once it is between 3-4 to 33-35 ft. away
+
+Can you guesstimate a distance threshold beyond which the chance of making a
+successful shot is basically null?
+- 34 ft.
+
+What distances tend to have a percentage (of making a shot) of 50% or more?
+- The following distances: 0  1  2 12 16 18 21 30 51
+
+#Total number of shots by minute of occurrence
+```{r}
+
+dt4 <- summarise(
+  group_by(dt, minute, name),
+  number_shot=length(shot_made_flag)
+)
+
+ggplot(data = dt4, aes(x = minute, y = number_shot))+
+  xlab("Minutes of Occurance")+
+  ylab("Total Number of Shots")+
+  geom_point()+
+  scale_x_continuous(breaks = c(12,24,36,48))+
+  geom_path() +
+  theme_minimal()+
+  geom_rect(xmin=0, xmax=12, ymin=0, ymax=60, alpha=0.01)+
+  geom_rect(xmin=24, xmax=36, ymin=0, ymax=60, alpha=0.01)+
+  facet_wrap( ~name)
+```
+
+
+
+
+
+
+
+
+
